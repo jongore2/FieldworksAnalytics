@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fieldwork Analytics builds practical dashboards for HVAC, pest control, plumbing, and field service businesses.">
+  <title>Fieldwork Analytics | Dashboards for Field Service Operators</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; }
+    :root {
+      --ink: #101923;
+      --navy: #0d1b2a;
+      --navy-2: #16283a;
+      --steel: #516a81;
+      --mist: #e8edf4;
+      --muted: #9aaec0;
+      --paper: #f4f0e8;
+      --teal: #1d9e75;
+      --teal-dark: #0f6e56;
+      --amber: #ef9f27;
+      --line: rgba(255, 255, 255, 0.12);
+      --panel: rgba(255, 255, 255, 0.06);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      min-width: 320px;
+      font-family: "DM Sans", Arial, sans-serif;
+      background: var(--navy);
+      color: var(--mist);
+      line-height: 1.6;
+    }
+    a { color: inherit; }
+    button, input, select, textarea { font: inherit; }
+    nav {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px clamp(20px, 5vw, 72px);
+      background: rgba(13, 27, 42, 0.92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+    .logo {
+      font-family: "DM Serif Display", Georgia, serif;
+      font-size: 1.25rem;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .logo span { color: var(--teal); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 3vw, 34px);
+      list-style: none;
+      padding: 0;
+    }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta, .btn-primary, .btn-secondary, .tier-btn, .submit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      border-radius: 8px;
+      border: 0;
+      cursor: pointer;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .nav-cta, .btn-primary, .submit-btn {
+      background: var(--teal);
+      color: #fff;
+      padding: 0 20px;
+    }
+    .nav-cta:hover, .btn-primary:hover, .submit-btn:hover {
+      background: var(--teal-dark);
+      transform: translateY(-1px);
+    }
+    section { padding: clamp(72px, 10vw, 120px) clamp(20px, 5vw, 72px); }
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(340px, 1.05fr);
+      align-items: center;
+      gap: clamp(32px, 6vw, 86px);
+      padding-top: 116px;
+      background:
+        linear-gradient(90deg, rgba(13, 27, 42, 0.98) 0%, rgba(13, 27, 42, 0.88) 45%, rgba(13, 27, 42, 0.68) 100%),
+        url("assets/fieldwork-hero.png") center right / cover no-repeat;
+    }
+    .hero-content { max-width: 720px; }
+    .eyebrow, .section-label {
+      color: var(--teal);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1, h2 {
+      font-family: "DM Serif Display", Georgia, serif;
+      color: #fff;
+      line-height: 1.08;
+      font-weight: 400;
+    }
+    h1 {
+      max-width: 760px;
+      margin-top: 18px;
+      font-size: clamp(3rem, 6.2vw, 5.8rem);
+    }
+    h1 em {
+      color: var(--teal);
+      font-style: italic;
+    }
+    .hero-copy {
+      max-width: 620px;
+      margin-top: 24px;
+      color: #c1ceda;
+      font-size: clamp(1.05rem, 1.7vw, 1.24rem);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .btn-primary, .btn-secondary { padding: 0 24px; }
+    .btn-secondary {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .btn-secondary:hover { border-color: rgba(255, 255, 255, 0.5); transform: translateY(-1px); }
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 42px;
+    }
+    .trust-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #d6e0ea;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .hero-panel {
+      align-self: end;
+      width: min(100%, 530px);
+      margin-left: auto;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(13, 27, 42, 0.82);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+    }
+    .panel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-title { color: #fff; font-weight: 800; }
+    .panel-date { color: var(--muted); font-size: 0.82rem; font-weight: 700; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric {
+      min-height: 116px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      color: #fff;
+      font-family: "DM Serif Display", Georgia, serif;
+      font-size: 2.1rem;
+      line-height: 1;
+      font-weight: 400;
+    }
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--teal);
+      font-weight: 800;
+    }
+    .bar-list { margin-top: 16px; }
+    .bar-head {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 84px 1fr 42px;
+      align-items: center;
+      gap: 10px;
+      margin-top: 11px;
+      color: #dbe5ee;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+    .track {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), var(--amber));
+    }
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 40px;
+    }
+    h2 {
+      margin-top: 12px;
+      font-size: clamp(2.1rem, 4vw, 3.55rem);
+    }
+    .section-sub {
+      max-width: 640px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .problem, .pricing, .contact { background: var(--navy-2); }
+    .pain-grid, .service-grid, .pricing-grid, .process-steps {
+      display: grid;
+      gap: 16px;
+    }
+    .pain-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .pain-card, .service-item, .pricing-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+    .pain-card { padding: 24px; }
+    .icon-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(29, 158, 117, 0.16);
+      font-weight: 900;
+    }
+    .pain-card h3, .service-item h3, .process-step h3 {
+      color: #fff;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+    .pain-card p, .service-item p, .process-step p, .tier-desc, .tier-features {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .solution-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: clamp(32px, 6vw, 76px);
+      align-items: start;
+    }
+    .service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .service-item { padding: 24px; }
+    .service-item strong {
+      display: block;
+      color: var(--amber);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .operator-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+      padding: 0;
+      list-style: none;
+    }
+    .operator-list li {
+      display: flex;
+      gap: 10px;
+      color: #d8e2eb;
+      font-weight: 700;
+    }
+    .operator-list li::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      margin-top: 8px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 5px rgba(29, 158, 117, 0.13);
+    }
+    .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .pricing-card {
+      position: relative;
+      padding: 28px;
+    }
+    .pricing-card.featured {
+      border-color: rgba(29, 158, 117, 0.8);
+      background: rgba(29, 158, 117, 0.09);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #092014;
+      background: var(--amber);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .tier-name {
+      margin-top: 18px;
+      color: var(--teal);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .tier-price {
+      margin-top: 10px;
+      color: #fff;
+      font-family: "DM Serif Display", Georgia, serif;
+      font-size: clamp(2.3rem, 4vw, 3.2rem);
+      line-height: 1;
+    }
+    .tier-price span {
+      color: var(--muted);
+      font-family: "DM Sans", Arial, sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .tier-features {
+      display: grid;
+      gap: 10px;
+      min-height: 190px;
+      margin-bottom: 24px;
+      padding: 0;
+      list-style: none;
+    }
+    .tier-features li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .tier-features li::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-top: 8px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+    .tier-btn {
+      width: 100%;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .featured .tier-btn {
+      border-color: var(--teal);
+      background: var(--teal);
+    }
+    .tier-btn:hover { transform: translateY(-1px); border-color: rgba(255, 255, 255, 0.46); }
+    .featured .tier-btn:hover { background: var(--teal-dark); }
+    .impl-note {
+      margin-top: 24px;
+      padding: 18px 20px;
+      border: 1px solid rgba(239, 159, 39, 0.32);
+      border-radius: 8px;
+      color: #e6c88f;
+      background: rgba(239, 159, 39, 0.08);
+    }
+    .impl-note strong { color: var(--amber); }
+    .process-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); counter-reset: process; }
+    .process-step {
+      counter-increment: process;
+      padding-top: 4px;
+    }
+    .process-step::before {
+      content: "0" counter(process);
+      display: block;
+      margin-bottom: 12px;
+      color: rgba(29, 158, 117, 0.44);
+      font-family: "DM Serif Display", Georgia, serif;
+      font-size: 2.6rem;
+      line-height: 1;
+    }
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1.1fr);
+      gap: clamp(32px, 6vw, 76px);
+      align-items: start;
+    }
+    .contact-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .contact-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: #d9e3ec;
+      font-weight: 700;
+    }
+    .contact-item span:first-child {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: rgba(29, 158, 117, 0.16);
+      color: var(--teal);
+    }
+    .contact-form {
+      display: grid;
+      gap: 14px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .form-group {
+      display: grid;
+      gap: 7px;
+    }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      color: #c9d6e1;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    input, select, textarea {
+      width: 100%;
+      min-height: 46px;
+      padding: 11px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(13, 27, 42, 0.52);
+      outline: none;
+    }
+    select option { background: var(--navy); }
+    textarea { min-height: 124px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { border-color: var(--teal); }
+    .submit-btn { width: 100%; margin-top: 4px; }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 26px clamp(20px, 5vw, 72px);
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+    }
+    footer .logo { font-size: 1rem; }
+    footer p { font-size: 0.86rem; }
+    @media (max-width: 1020px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-panel { margin-left: 0; }
+      .pain-grid, .pricing-grid, .process-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .solution-wrap, .contact-wrap { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      nav { padding: 14px 18px; }
+      .nav-links { display: none; }
+      .nav-cta { padding: 0 14px; font-size: 0.88rem; }
+      .hero {
+        min-height: auto;
+        padding-top: 104px;
+        background:
+          linear-gradient(180deg, rgba(13, 27, 42, 0.96) 0%, rgba(13, 27, 42, 0.9) 62%, rgba(13, 27, 42, 0.82) 100%),
+          url("assets/fieldwork-hero.png") center top / cover no-repeat;
+      }
+      .hero-actions a { width: 100%; }
+      .metric-grid, .pain-grid, .service-grid, .pricing-grid, .process-steps, .form-grid { grid-template-columns: 1fr; }
+      .bar-row { grid-template-columns: 76px 1fr 36px; }
+      .tier-features { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="Main navigation">
+    <div class="logo">Fieldwork <span>Analytics</span></div>
+    <ul class="nav-links">
+      <li><a href="#problem">Problem</a></li>
+      <li><a href="#solution">Services</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <button class="nav-cta" type="button" data-scroll="#contact">Book a Call</button>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">Fieldwork Analytics</p>
+        <h1>Dashboards for the people <em>running the business.</em></h1>
+        <p class="hero-copy">We build clear, live analytics dashboards for HVAC, pest control, plumbing, and other field service businesses so owners can see what is working, what is leaking, and where to focus next.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#contact">Book a Free Discovery Call</a>
+          <a class="btn-secondary" href="#solution">See What We Build</a>
+        </div>
+        <div class="trust-row" aria-label="Industries served">
+          <span class="trust-pill">HVAC</span>
+          <span class="trust-pill">Pest control</span>
+          <span class="trust-pill">Plumbing</span>
+          <span class="trust-pill">Home services</span>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-label="Example field service dashboard">
+        <div class="panel-top">
+          <div class="panel-title">Operations Snapshot</div>
+          <div class="panel-date">This Month</div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric">
+            <span>Booked lead rate</span>
+            <strong>64%</strong>
+            <small>+11% from last month</small>
+          </div>
+          <div class="metric">
+            <span>Average job value</span>
+            <strong>$287</strong>
+            <small>+6% from last month</small>
+          </div>
+          <div class="metric">
+            <span>Missed call rate</span>
+            <strong>8%</strong>
+            <small style="color: var(--amber);">down from 19%</small>
+          </div>
+          <div class="metric">
+            <span>Recurring revenue</span>
+            <strong>$41K</strong>
+            <small>on track</small>
+          </div>
+        </div>
+        <div class="bar-list">
+          <div class="bar-head">
+            <span>Rep close rate</span>
+            <span>Booked</span>
+          </div>
+          <div class="bar-row"><span>Martinez</span><div class="track"><div class="fill" style="width:88%"></div></div><span>88%</span></div>
+          <div class="bar-row"><span>Thompson</span><div class="track"><div class="fill" style="width:74%"></div></div><span>74%</span></div>
+          <div class="bar-row"><span>Okafor</span><div class="track"><div class="fill" style="width:61%"></div></div><span>61%</span></div>
+          <div class="bar-row"><span>Chen</span><div class="track"><div class="fill" style="width:52%"></div></div><span>52%</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="problem" id="problem">
+      <div class="section-head">
+        <p class="section-label">The Problem</p>
+        <h2>Your software has the data. Your team needs the answers.</h2>
+        <p class="section-sub">ServiceTitan, FieldRoutes, Housecall Pro, Jobber, CallRail, QuickBooks, and spreadsheets all tell part of the story. Fieldwork Analytics turns those scattered reports into one operating view.</p>
+      </div>
+      <div class="pain-grid">
+        <article class="pain-card">
+          <div class="icon-mark">01</div>
+          <h3>Reports that do not guide decisions</h3>
+          <p>You can pull numbers, but it still takes too long to know which leads, reps, technicians, or customers need attention.</p>
+        </article>
+        <article class="pain-card">
+          <div class="icon-mark">02</div>
+          <h3>Revenue leaks hide in the handoffs</h3>
+          <p>Missed calls, stale estimates, poor close rates, callbacks, and churn are often visible only after the damage is done.</p>
+        </article>
+        <article class="pain-card">
+          <div class="icon-mark">03</div>
+          <h3>A full-time analyst is too expensive</h3>
+          <p>Most small and midsize operators need clean dashboards and practical insight, not another salaried hire to manage.</p>
+        </article>
+        <article class="pain-card">
+          <div class="icon-mark">04</div>
+          <h3>Your time belongs in the business</h3>
+          <p>You should not be cleaning exports or rebuilding spreadsheets when your team needs decisions before the next dispatch.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="solution" id="solution">
+      <div class="solution-wrap">
+        <div>
+          <p class="section-label">What We Build</p>
+          <h2>Analytics made for operators, owners, and managers.</h2>
+          <p class="section-sub">We connect the systems you already use, clean up the data underneath, and build dashboards that match how your business actually runs.</p>
+          <ul class="operator-list">
+            <li>Daily operating dashboard for owners and managers</li>
+            <li>Lead, estimate, sales, and booking performance</li>
+            <li>Technician, route, callback, and service trend views</li>
+            <li>Monthly review notes with the numbers that changed</li>
+          </ul>
+        </div>
+        <div class="service-grid">
+          <article class="service-item">
+            <strong>Connect</strong>
+            <h3>Bring your sources together</h3>
+            <p>CRM, phones, scheduling, payments, accounting, reviews, and spreadsheets can be blended into one clean model.</p>
+          </article>
+          <article class="service-item">
+            <strong>Clarify</strong>
+            <h3>Answer real business questions</h3>
+            <p>Track booked leads, revenue by source, technician productivity, cancellations, repeat customers, and profitability signals.</p>
+          </article>
+          <article class="service-item">
+            <strong>Maintain</strong>
+            <h3>Keep dashboards useful over time</h3>
+            <p>As your tools, team, and priorities change, we update the dashboard and keep the reporting clean.</p>
+          </article>
+          <article class="service-item">
+            <strong>Advise</strong>
+            <h3>Turn insight into next steps</h3>
+            <p>Monthly summaries help you focus on the few operational moves most likely to improve revenue and efficiency.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="contact-wrap">
+        <div>
+          <p class="section-label">Get In Touch</p>
+          <h2>Ready to see what your data actually says?</h2>
+          <p class="section-sub">Share a few details and we will follow up within one business day to talk through your tools, goals, and whether Fieldwork Analytics is a fit.</p>
+          <div class="contact-list">
+            <div class="contact-item"><span>@</span><a href="mailto:jon@fieldworkanalytics.com">jon@fieldworkanalytics.com</a></div>
+            <div class="contact-item"><span>#</span><a href="tel:+10000000000">(your phone number here)</a></div>
+            <div class="contact-item"><span>SC</span><span>Tega Cay, SC. Serving businesses nationwide.</span></div>
+          </div>
+        </div>
+        <form class="contact-form" id="leadForm" name="fieldwork-lead" method="post">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="name">Your Name</label>
+              <input id="name" name="name" type="text" placeholder="John Smith" autocomplete="name" required>
+            </div>
+            <div class="form-group">
+              <label for="business">Business Name</label>
+              <input id="business" name="business" type="text" placeholder="Smith HVAC Services" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" placeholder="john@smithhvac.com" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" placeholder="(555) 000-0000" autocomplete="tel">
+            </div>
+            <div class="form-group full">
+              <label for="software">Current Software</label>
+              <select id="software" name="software" required>
+                <option value="">Select your CRM or platform</option>
+                <option>FieldRoutes</option>
+                <option>ServiceTitan</option>
+                <option>Housecall Pro</option>
+                <option>Jobber</option>
+                <option>CallRail</option>
+                <option>QuickBooks</option>
+                <option>Other or not sure</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label for="challenge">Biggest Data Challenge</label>
+              <textarea id="challenge" name="challenge" placeholder="Tell us what questions you cannot currently answer about your business..." required></textarea>
+            </div>
+          </div>
+          <button class="submit-btn" type="submit">Send Message</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+      <div class="section-head">
+        <p class="section-label">Pricing</p>
+        <h2>Simple monthly plans after implementation.</h2>
+        <p class="section-sub">Pick the level of dashboard support your business needs. Every engagement starts with a scoped setup so the monthly work is built on clean foundations.</p>
+      </div>
+      <div class="pricing-grid">
+        <article class="pricing-card">
+          <div class="tier-name">Starter</div>
+          <div class="tier-price">$750<span>/month</span></div>
+          <p class="tier-desc">For one core data source and a clean owner dashboard.</p>
+          <ul class="tier-features">
+            <li>1 data source connected</li>
+            <li>Standard dashboard build</li>
+            <li>Monthly refresh cadence</li>
+            <li>Email report delivery</li>
+            <li>Light dashboard updates</li>
+          </ul>
+          <button class="tier-btn" type="button" data-scroll="#contact">Start with Starter</button>
+        </article>
+        <article class="pricing-card featured">
+          <span class="badge">Most Popular</span>
+          <div class="tier-name">Growth</div>
+          <div class="tier-price">$1,250<span>/month</span></div>
+          <p class="tier-desc">For operators ready to connect CRM, phones, and scheduling.</p>
+          <ul class="tier-features">
+            <li>Up to 3 data sources connected</li>
+            <li>Custom operating dashboard</li>
+            <li>Near-real-time reporting options</li>
+            <li>New report requests included</li>
+            <li>Monthly performance summary</li>
+            <li>Priority support</li>
+          </ul>
+          <button class="tier-btn" type="button" data-scroll="#contact">Choose Growth</button>
+        </article>
+        <article class="pricing-card">
+          <div class="tier-name">Partner</div>
+          <div class="tier-price">$1,750<span>/month</span></div>
+          <p class="tier-desc">For businesses treating analytics as an operating system.</p>
+          <ul class="tier-features">
+            <li>Unlimited data sources</li>
+            <li>Full custom dashboard suite</li>
+            <li>Unlimited report requests</li>
+            <li>Real-time pipeline options</li>
+            <li>Quarterly data audit</li>
+            <li>Highest priority support</li>
+          </ul>
+          <button class="tier-btn" type="button" data-scroll="#contact">Talk Partner Plan</button>
+        </article>
+      </div>
+      <p class="impl-note"><strong>Implementation fee:</strong> setup is quoted separately after discovery. You get a fixed scope before work begins, including source connections, data cleanup, and the first dashboard build.</p>
+    </section>
+
+    <section class="process" id="process">
+      <div class="section-head">
+        <p class="section-label">How It Works</p>
+        <h2>From scattered reports to a working dashboard in weeks.</h2>
+        <p class="section-sub">The process is direct: learn the business, scope the data, build the dashboard, then keep improving it as operations change.</p>
+      </div>
+      <div class="process-steps">
+        <article class="process-step">
+          <h3>Discovery call</h3>
+          <p>We map your business, software, and the questions you cannot answer quickly today.</p>
+        </article>
+        <article class="process-step">
+          <h3>Fixed setup scope</h3>
+          <p>You receive a clear implementation quote before data connections or dashboard work begins.</p>
+        </article>
+        <article class="process-step">
+          <h3>Build and review</h3>
+          <p>We connect sources, clean the data, build the first dashboard, and revise with your feedback.</p>
+        </article>
+        <article class="process-step">
+          <h3>Operate with clarity</h3>
+          <p>Your team gets a dashboard that stays fresh, with ongoing updates as the business evolves.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="logo">Fieldwork <span>Analytics</span></div>
+    <p>Copyright 2026 Fieldwork Analytics. Tega Cay, SC.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll("[data-scroll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelector(button.dataset.scroll).scrollIntoView({ behavior: "smooth" });
+      });
+    });
+
+    document.getElementById("leadForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      const subject = `Fieldwork Analytics inquiry from ${data.get("business") || "website lead"}`;
+      const body = [
+        `Name: ${data.get("name")}`,
+        `Business: ${data.get("business")}`,
+        `Email: ${data.get("email")}`,
+        `Phone: ${data.get("phone") || "Not provided"}`,
+        `Software: ${data.get("software")}`,
+        "",
+        "Biggest data challenge:",
+        data.get("challenge")
+      ].join("\n");
+      window.location.href = `mailto:jon@fieldworkanalytics.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    });
+  </script>
+</body>
+</html>
