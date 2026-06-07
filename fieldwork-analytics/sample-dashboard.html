@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Demo Service Co. | Sales Command Center</title>
+  <title>Sample Dashboard | Fieldwork Analytics</title>
   <style>
     :root {
       --bg: #050608;
@@ -365,17 +365,17 @@
   <main class="shell">
     <nav class="demo-nav" aria-label="Demo dashboard navigation">
       <a href="index.html">Back to Fieldwork Analytics</a>
-      <span class="demo-note">Sample dashboard with anonymized demo data</span>
+      <span class="demo-note">Sales and lead dashboard with anonymized demo data</span>
       <a href="index.html#contact">Book a Call</a>
     </nav>
     <header>
       <div>
-        <h1><span class="brand">Demo Service Co.</span>Sales Command Center</h1>
-        <p class="subtitle">A sample lead-flow dashboard showing sold subscriptions, conversion, inquiry mix, follow-up gaps, and rep performance for a field service business.</p>
+        <h1><span class="brand">Sample Dashboard</span>Sales & Lead Performance</h1>
+        <p class="subtitle">A sample owner dashboard showing lead volume, sales conversion, rep performance, conversion gaps, and the operational actions hiding in the data.</p>
       </div>
       <div class="period">
         <b>Reporting Window</b>
-        <span>Apr 1-30, 2026</span>
+        <span>Sample 90-day sales view</span>
         <div class="filter-strip">
           <span id="activeFilter">All leads</span>
           <button id="resetFilters" type="button">Reset</button>
@@ -395,14 +395,14 @@
         <div class="signal" id="kpiSoldSignal">37.6% sold conversion</div>
       </article>
       <article class="card kpi">
-        <div class="label">Scheduled Next Step</div>
-        <div class="value" id="kpiScheduled">179</div>
-        <div class="signal">Consults, inspections, OTPC</div>
+        <div class="label">Sales Conversion</div>
+        <div class="value" id="kpiConversion">37.6%</div>
+        <div class="signal">Sold subscriptions / leads</div>
       </article>
       <article class="card kpi">
-        <div class="label">Notes Captured</div>
-        <div class="value" id="kpiNotes">114</div>
-        <div class="signal">Ready for AI objection mining</div>
+        <div class="label">Conversion Upside</div>
+        <div class="value" id="kpiUpside">13</div>
+        <div class="signal">More subs if below-average reps reach avg.</div>
       </article>
 
       <article class="card wide">
@@ -411,14 +411,14 @@
       </article>
 
       <article class="card side">
-        <h2>AI-Style Readout</h2>
+        <h2>Action Items</h2>
         <div id="insights"></div>
       </article>
 
       <article class="card half">
-        <h2>Rep Leaderboard</h2>
+        <h2>Sales Rep Performance</h2>
         <table class="table">
-          <thead><tr><th>Rep</th><th>Leads</th><th>Sold</th><th>Conv.</th><th>Scheduled</th></tr></thead>
+          <thead><tr><th>Rep</th><th>Leads</th><th>Sales</th><th>Conv.</th><th>Gap</th><th>Upside</th></tr></thead>
           <tbody id="repRows"></tbody>
         </table>
       </article>
@@ -433,7 +433,7 @@
         <div id="outcomeBars"></div>
       </article>
     </section>
-    <footer>Demo dashboard by Fieldwork Analytics. Sample names and data are used for illustration. Click reps, inquiry types, or outcomes to filter the whole dashboard.</footer>
+    <footer>Sample dashboard by Fieldwork Analytics. Demo names and data are used for illustration. Click reps, inquiry types, or outcomes to filter the whole dashboard.</footer>
   </main>
 
   <script src="sample-dashboard-data.js"></script>
@@ -487,6 +487,20 @@
       }));
     }
 
+    function teamConversion(rows) {
+      return rows.length ? rows.filter(isSold).length / rows.length * 100 : 0;
+    }
+
+    function repGapData(rows) {
+      const average = teamConversion(rows);
+      const reps = summarize(rows, "rep").map(rep => {
+        const gap = Math.max(0, average - rep.conversion);
+        const upside = Math.max(0, Math.round(rep.leads * average / 100 - rep.sold));
+        return { ...rep, gap, upside };
+      });
+      return { average, reps };
+    }
+
     function setFilter(type, value) {
       state[type] = state[type] === value ? null : value;
       render();
@@ -494,12 +508,14 @@
 
     function renderKpis(rows) {
       const soldCount = rows.filter(isSold).length;
+      const { average, reps } = repGapData(rows);
+      const upside = reps.reduce((sum, rep) => sum + rep.upside, 0);
       document.querySelector("#kpiLeads").textContent = money.format(rows.length);
       document.querySelector("#kpiSold").textContent = money.format(soldCount);
-      document.querySelector("#kpiSoldSignal").textContent = `${pct(rows.length ? soldCount / rows.length * 100 : 0)} sold conversion`;
-      document.querySelector("#kpiScheduled").textContent = money.format(rows.filter(isScheduled).length);
-      document.querySelector("#kpiNotes").textContent = money.format(rows.filter(row => row.note).length);
-      document.querySelector("#kpiLeadsSignal").textContent = state.rep || state.inquiry || state.outcome ? "Filtered lead set" : "Clean rows from Master tab";
+      document.querySelector("#kpiSoldSignal").textContent = `${pct(average)} sold conversion`;
+      document.querySelector("#kpiConversion").textContent = pct(average);
+      document.querySelector("#kpiUpside").textContent = money.format(upside);
+      document.querySelector("#kpiLeadsSignal").textContent = state.rep || state.inquiry || state.outcome ? "Filtered lead set" : "All sample leads";
     }
 
     function renderFilterLabel() {
@@ -512,14 +528,15 @@
 
     function renderReps(rows) {
       repRows.innerHTML = "";
-      summarize(rows, "rep").sort((a, b) => b.sold - a.sold).forEach((r, i) => {
+      repGapData(rows).reps.sort((a, b) => b.sold - a.sold).forEach((r, i) => {
         repRows.insertAdjacentHTML("beforeend", `
           <tr class="${state.rep === r.name ? "selected-row" : ""}" data-rep="${r.name}">
             <td><span class="rank"><span class="dot"></span>${i + 1}. ${r.name}</span></td>
             <td>${r.leads}</td>
             <td>${r.sold}</td>
             <td>${pct(r.conversion)}</td>
-            <td>${r.scheduled}</td>
+            <td>${r.gap ? `${pct(r.gap)} below avg` : "On pace"}</td>
+            <td>${r.upside ? `+${r.upside} subs` : "-"}</td>
           </tr>
         `);
       });
@@ -585,15 +602,18 @@
 
     function renderInsights(rows) {
       const totalSold = rows.filter(isSold).length;
-      const repTop = summarize(rows, "rep").sort((a, b) => b.conversion - a.conversion)[0];
+      const { average, reps } = repGapData(rows);
+      const repTop = reps.sort((a, b) => b.conversion - a.conversion)[0];
+      const largestGap = reps.filter(rep => rep.leads >= 5 && rep.gap > 0).sort((a, b) => b.upside - a.upside || b.gap - a.gap)[0];
+      const coachingRep = reps.find(rep => rep.name === "Morgan") || largestGap;
       const inquiryTop = summarize(rows, "inquiry").filter(d => d.leads >= 5).sort((a, b) => b.conversion - a.conversion)[0];
       const price = rows.filter(row => row.outcomes.includes("Rejected due to Price")).length;
-      const noteCount = rows.filter(row => row.note).length;
+      const scheduledCount = rows.filter(isScheduled).length;
       insights.innerHTML = `
-        <div class="insight"><div class="bolt">1</div><p><strong>${rows.length} matching leads:</strong> ${totalSold} sold subscriptions at ${pct(rows.length ? totalSold / rows.length * 100 : 0)} conversion.</p></div>
-        <div class="insight"><div class="bolt">2</div><p><strong>${repTop ? repTop.name : "No rep"} leads this view:</strong> ${repTop ? pct(repTop.conversion) : "0.0%"} conversion across ${repTop ? repTop.leads : 0} leads.</p></div>
-        <div class="insight"><div class="bolt">3</div><p><strong>${inquiryTop ? inquiryTop.name : "No inquiry"} is the strongest inquiry type here:</strong> ${inquiryTop ? pct(inquiryTop.conversion) : "0.0%"} conversion.</p></div>
-        <div class="insight"><div class="bolt">4</div><p><strong>Follow-up texture:</strong> ${price} price objections and ${noteCount} note-bearing leads in this filtered view.</p></div>
+        <div class="insight"><div class="bolt">1</div><p><strong>Team sales conversion is ${pct(average)}:</strong> ${totalSold} sold subscriptions from ${rows.length} leads.</p></div>
+        <div class="insight"><div class="bolt">2</div><p><strong>${coachingRep ? coachingRep.name : "No rep"} is ${coachingRep ? pct(coachingRep.gap) : "0.0%"} below average:</strong> ${coachingRep ? pct(coachingRep.conversion) : "0.0%"} conversion. If they reached the team average, this sample window would produce about ${coachingRep ? coachingRep.upside : 0} more subscriptions.</p></div>
+        <div class="insight"><div class="bolt">3</div><p><strong>${repTop ? repTop.name : "No rep"} is setting the pace:</strong> ${repTop ? pct(repTop.conversion) : "0.0%"} conversion across ${repTop ? repTop.leads : 0} leads. Use this rep's talk track as the model.</p></div>
+        <div class="insight"><div class="bolt">4</div><p><strong>${largestGap ? largestGap.name : "No rep"} has the largest upside:</strong> closing the gap to average would add about ${largestGap ? largestGap.upside : 0} subscriptions. Also review ${price} price objections and ${scheduledCount} scheduled next steps.</p></div>
       `;
     }
 
