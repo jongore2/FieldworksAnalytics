@@ -536,7 +536,30 @@
 
   <script src="sample-dashboard-data.js"></script>
   <script>
-    const leads = window.SAMPLE_LEADS || [];
+    function buildFallbackLeads() {
+      const reps = ["Sarah", "Mike", "Alex", "Jordan", "Taylor", "Morgan"];
+      const services = ["Service Type 1", "Service Type 2", "Service Type 3", "Service Type 4", "Service Type 5", "Service Type 6"];
+      const rows = [];
+      for (let i = 0; i < 240; i += 1) {
+        const month = Math.floor(i * 3 / 240) + 1;
+        const daySpan = month === 2 ? 28 : 31;
+        const day = ((i * 7) % daySpan) + 1;
+        const rep = reps[i % reps.length];
+        const service = services[(i * 3 + month) % services.length];
+        const score = (i * 17 + rep.length * 9) % 100;
+        const outcomes = score < 38 ? ["Sold Subscription"] : score < 68 ? ["Scheduled Consult / Inspection"] : score < 82 ? ["Unsure, prospecting"] : score < 92 ? ["Rejected due to Price"] : ["Not Interested"];
+        rows.push({
+          date: `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+          rep,
+          inquiry: service,
+          outcomes,
+          note: score > 70
+        });
+      }
+      return rows;
+    }
+
+    const leads = Array.isArray(window.SAMPLE_LEADS) && window.SAMPLE_LEADS.length ? window.SAMPLE_LEADS : buildFallbackLeads();
     const state = { rep: null, inquiry: null, outcome: null, timeView: "quarter", month: 1, week: 1, day: "2026-01-01" };
     const repRows = document.querySelector("#repRows");
     const inquiryBars = document.querySelector("#inquiryBars");
@@ -826,8 +849,8 @@
     }
 
     function render() {
-      const rows = activeRows();
       renderTimeControls();
+      const rows = activeRows();
       renderFilterLabel();
       renderKpis(rows);
       renderLeadChart(rows);
