@@ -105,16 +105,20 @@
       font-weight: 700;
     }
 
-    .date-controls {
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
+    .chart-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
 
     .view-toggle {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 6px;
+      min-width: min(100%, 390px);
     }
 
     .view-btn.active {
@@ -123,36 +127,10 @@
       background: rgba(29, 158, 117, .28);
     }
 
-    .date-selects {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .date-selects label {
-      display: grid;
-      gap: 4px;
+    .drill-note {
       color: var(--muted);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    select {
-      min-height: 34px;
-      border: 1px solid rgba(29, 158, 117, .28);
-      border-radius: 8px;
-      color: var(--text);
-      background: rgba(5, 6, 8, .72);
-      padding: 6px 8px;
-      font: inherit;
       font-size: 12px;
-    }
-
-    select:disabled {
-      opacity: .45;
-      cursor: not-allowed;
+      font-weight: 700;
     }
 
     button {
@@ -316,10 +294,17 @@
       min-width: 0;
       height: var(--h);
       width: 100%;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
       border-radius: 5px 5px 2px 2px;
       background: linear-gradient(180deg, rgba(65, 241, 143, .96), rgba(88, 199, 255, .76));
       position: relative;
       box-shadow: 0 0 16px rgba(65, 241, 143, .24);
+    }
+
+    .day:hover {
+      filter: brightness(1.18);
     }
 
     .axis-label {
@@ -430,7 +415,7 @@
       .value { font-size: 36px; }
       .bar-row { grid-template-columns: 88px 1fr 54px; }
       .table { font-size: 12px; }
-      .date-selects, .view-toggle { grid-template-columns: repeat(2, 1fr); }
+      .view-toggle { grid-template-columns: repeat(2, 1fr); }
       .chart { overflow-x: auto; padding-bottom: 8px; }
       .chart-item { min-width: 54px; }
     }
@@ -450,30 +435,7 @@
       </div>
       <div class="period">
         <b>Reporting Window</b>
-        <span id="reportWindow">Q1 2026 sales view</span>
-        <div class="date-controls" aria-label="Reporting window controls">
-          <div class="view-toggle">
-            <button class="view-btn active" type="button" data-view="quarter">Quarter</button>
-            <button class="view-btn" type="button" data-view="month">Month</button>
-            <button class="view-btn" type="button" data-view="week">Week</button>
-            <button class="view-btn" type="button" data-view="day">Day</button>
-          </div>
-          <div class="date-selects">
-            <label>Month
-              <select id="monthFilter">
-                <option value="1">Jan</option>
-                <option value="2">Feb</option>
-                <option value="3">Mar</option>
-              </select>
-            </label>
-            <label>Week
-              <select id="weekFilter"></select>
-            </label>
-            <label>Day
-              <select id="dayFilter"></select>
-            </label>
-          </div>
-        </div>
+        <span id="reportWindow">Sample 2026 sales view</span>
         <div class="filter-strip">
           <span id="activeFilter">All leads</span>
           <button id="resetFilters" type="button">Reset</button>
@@ -504,7 +466,16 @@
       </article>
 
       <article class="card wide">
-        <h2 id="leadChartTitle">Lead Flow by Period</h2>
+        <div class="chart-toolbar">
+          <h2 id="leadChartTitle">Lead Flow by Quarter</h2>
+          <div class="view-toggle" aria-label="Chart drill-down controls">
+            <button class="view-btn active" type="button" data-view="quarter">Quarter</button>
+            <button class="view-btn" type="button" data-view="month">Month</button>
+            <button class="view-btn" type="button" data-view="week">Week</button>
+            <button class="view-btn" type="button" data-view="day">Day</button>
+          </div>
+          <span class="drill-note" id="drillNote">Click a quarter bar to drill into months.</span>
+        </div>
         <div class="chart" id="dailyChart"></div>
       </article>
 
@@ -541,9 +512,19 @@
       const services = ["Service Type 1", "Service Type 2", "Service Type 3", "Service Type 4", "Service Type 5", "Service Type 6"];
       const rows = [];
       for (let i = 0; i < 240; i += 1) {
-        const month = Math.floor(i * 3 / 240) + 1;
+        const monthWeights = [34, 62, 41, 78, 54, 92, 47, 68, 112, 58, 83, 39];
+        const totalWeight = monthWeights.reduce((sum, value) => sum + value, 0);
+        let target = ((i * 37) % totalWeight) + 1;
+        let month = 1;
+        for (let index = 0; index < monthWeights.length; index += 1) {
+          target -= monthWeights[index];
+          if (target <= 0) {
+            month = index + 1;
+            break;
+          }
+        }
         const daySpan = month === 2 ? 28 : 31;
-        const day = ((i * 7) % daySpan) + 1;
+        const day = ((i * 11 + month * 5 + Math.floor(i / 9)) % daySpan) + 1;
         const rep = reps[i % reps.length];
         const service = services[(i * 3 + month) % services.length];
         const score = (i * 17 + rep.length * 9) % 100;
@@ -560,20 +541,16 @@
     }
 
     const leads = Array.isArray(window.SAMPLE_LEADS) && window.SAMPLE_LEADS.length ? window.SAMPLE_LEADS : buildFallbackLeads();
-    const state = { rep: null, inquiry: null, outcome: null, timeView: "quarter", month: 1, week: 1, day: "2026-01-01" };
+    const state = { rep: null, inquiry: null, outcome: null, chartView: "quarter", quarter: null, month: null, week: null };
     const repRows = document.querySelector("#repRows");
     const inquiryBars = document.querySelector("#inquiryBars");
     const outcomeBars = document.querySelector("#outcomeBars");
     const dailyChart = document.querySelector("#dailyChart");
     const insights = document.querySelector("#insights");
-    const reportWindow = document.querySelector("#reportWindow");
     const leadChartTitle = document.querySelector("#leadChartTitle");
-    const monthFilter = document.querySelector("#monthFilter");
-    const weekFilter = document.querySelector("#weekFilter");
-    const dayFilter = document.querySelector("#dayFilter");
+    const drillNote = document.querySelector("#drillNote");
     const money = new Intl.NumberFormat("en-US");
-    const monthNames = ["Jan", "Feb", "Mar"];
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     function isSold(row) {
       return row.outcomes.includes("Sold Subscription");
@@ -595,7 +572,11 @@
       return parseDate(row.date).getMonth() + 1;
     }
 
-    function weekOfQuarter(dateValue) {
+    function quarterOf(row) {
+      return Math.floor((monthOf(row) - 1) / 3) + 1;
+    }
+
+    function weekOfYear(dateValue) {
       const start = new Date("2026-01-01T00:00:00");
       const date = typeof dateValue === "string" ? parseDate(dateValue) : dateValue;
       return Math.floor((date - start) / 604800000) + 1;
@@ -613,19 +594,18 @@
 
     function activeRows() {
       return leads.filter(row =>
-        matchesTime(row) &&
+        matchesChartContext(row) &&
         (!state.rep || row.rep === state.rep) &&
         (!state.inquiry || row.inquiry === state.inquiry) &&
         (!state.outcome || row.outcomes.includes(state.outcome))
       );
     }
 
-    function matchesTime(row) {
-      const rowDate = parseDate(row.date);
-      if (state.timeView === "month") return monthOf(row) === state.month;
-      if (state.timeView === "week") return weekOfQuarter(rowDate) === state.week;
-      if (state.timeView === "day") return row.date === state.day;
-      return rowDate >= parseDate("2026-01-01") && rowDate <= parseDate("2026-03-31");
+    function matchesChartContext(row) {
+      if (state.chartView === "month" && state.quarter) return quarterOf(row) === state.quarter;
+      if (state.chartView === "week" && state.month) return monthOf(row) === state.month;
+      if (state.chartView === "day" && state.week) return weekOfYear(row.date) === state.week;
+      return true;
     }
 
     function summarize(rows, key) {
@@ -681,11 +661,13 @@
 
     function renderFilterLabel() {
       const parts = [];
-      parts.push(`Window: ${reportWindow.textContent}`);
+      if (state.chartView === "month" && state.quarter) parts.push(`Q${state.quarter}`);
+      if (state.chartView === "week" && state.month) parts.push(monthNames[state.month - 1]);
+      if (state.chartView === "day" && state.week) parts.push(`Week ${state.week}`);
       if (state.rep) parts.push(`Rep: ${state.rep}`);
       if (state.inquiry) parts.push(`Service: ${state.inquiry}`);
       if (state.outcome) parts.push(`Outcome: ${state.outcome}`);
-      document.querySelector("#activeFilter").textContent = parts.join(" / ");
+      document.querySelector("#activeFilter").textContent = parts.length ? parts.join(" / ") : "All leads";
     }
 
     function renderReps(rows) {
@@ -745,58 +727,77 @@
     }
 
     function renderLeadChart(rows) {
-      const map = new Map();
-      let chartTitle = "Lead Flow by Month";
+      let chartTitle = "Lead Flow by Quarter";
+      let note = "Click a quarter bar to drill into months.";
       let groups = [];
 
-      if (state.timeView === "quarter") {
-        groups = [1, 2, 3].map(month => ({ key: `m-${month}`, label: monthNames[month - 1], leads: 0, sold: 0 }));
+      if (state.chartView === "quarter") {
+        groups = [1, 2, 3, 4].map(quarter => ({ key: String(quarter), label: `Q${quarter}`, leads: 0, sold: 0, nextView: "month", quarter }));
         rows.forEach(row => {
-          const group = groups.find(item => item.key === `m-${monthOf(row)}`);
+          const group = groups.find(item => item.quarter === quarterOf(row));
           if (!group) return;
           group.leads += 1;
           group.sold += isSold(row) ? 1 : 0;
         });
-        chartTitle = "Q1 Lead Flow by Month";
-      } else if (state.timeView === "month") {
-        groups = [1, 2, 3, 4, 5].map(week => ({ key: `wm-${week}`, label: `Week ${week}`, leads: 0, sold: 0 }));
+      } else if (state.chartView === "month") {
+        const months = state.quarter
+          ? [state.quarter * 3 - 2, state.quarter * 3 - 1, state.quarter * 3]
+          : Array.from({ length: 12 }, (_, index) => index + 1);
+        groups = months.map(month => ({ key: String(month), label: monthNames[month - 1], leads: 0, sold: 0, nextView: "week", month }));
         rows.forEach(row => {
-          const group = groups.find(item => item.key === `wm-${weekOfMonth(row.date)}`);
+          const group = groups.find(item => item.month === monthOf(row));
           if (!group) return;
           group.leads += 1;
           group.sold += isSold(row) ? 1 : 0;
         });
-        chartTitle = `${monthNames[state.month - 1]} Lead Flow by Week`;
-      } else if (state.timeView === "week") {
-        const weekRows = leads.filter(row => weekOfQuarter(row.date) === state.week);
-        groups = [...new Set(weekRows.map(row => row.date))].sort().map(date => ({ key: date, label: formatDay(date), leads: 0, sold: 0 }));
+        chartTitle = state.quarter ? `Q${state.quarter} Lead Flow by Month` : "Lead Flow by Month";
+        note = "Click a month bar to drill into weeks.";
+      } else if (state.chartView === "week") {
+        const availableWeeks = [...new Set(rows.map(row => weekOfYear(row.date)))].sort((a, b) => a - b);
+        groups = availableWeeks.map(week => ({ key: String(week), label: `Week ${week}`, leads: 0, sold: 0, nextView: "day", week }));
+        rows.forEach(row => {
+          const group = groups.find(item => item.week === weekOfYear(row.date));
+          if (!group) return;
+          group.leads += 1;
+          group.sold += isSold(row) ? 1 : 0;
+        });
+        chartTitle = state.month ? `${monthNames[state.month - 1]} Lead Flow by Week` : "Lead Flow by Week";
+        note = "Click a week bar to drill into daily lead flow.";
+      } else {
+        const dates = [...new Set(rows.map(row => row.date))].sort();
+        groups = dates.map(date => ({ key: date, label: formatDay(date), leads: 0, sold: 0 }));
         rows.forEach(row => {
           const group = groups.find(item => item.key === row.date);
           if (!group) return;
           group.leads += 1;
           group.sold += isSold(row) ? 1 : 0;
         });
-        chartTitle = `Week ${state.week} Lead Flow by Day`;
-      } else {
-        groups = [{ key: state.day, label: formatDay(state.day), leads: 0, sold: 0 }];
-        rows.forEach(row => {
-          groups[0].leads += 1;
-          groups[0].sold += isSold(row) ? 1 : 0;
-        });
-        chartTitle = `${formatDay(state.day)} Lead Flow`;
+        chartTitle = state.week ? `Week ${state.week} Lead Flow by Day` : "Daily Lead Flow";
+        note = "Daily view shows the selected drill-down period.";
       }
 
       leadChartTitle.textContent = chartTitle;
+      drillNote.textContent = note;
       const max = Math.max(...groups.map(d => d.leads), 1);
       dailyChart.innerHTML = "";
       groups.forEach(d => {
         const height = Math.max(5, d.leads / max * 100);
         dailyChart.insertAdjacentHTML("beforeend", `
           <div class="chart-item">
-            <div class="day" style="--h:${height}%" data-tip="${d.label}: ${d.leads} leads, ${d.sold} sold"></div>
+            <button class="day" type="button" style="--h:${height}%" data-tip="${d.label}: ${d.leads} leads, ${d.sold} sold" data-next-view="${d.nextView || ""}" data-quarter="${d.quarter || ""}" data-month="${d.month || ""}" data-week="${d.week || ""}"></button>
             <div class="axis-label">${d.label}</div>
           </div>
         `);
+      });
+      dailyChart.querySelectorAll(".day").forEach(bar => {
+        bar.addEventListener("click", () => {
+          if (!bar.dataset.nextView) return;
+          state.chartView = bar.dataset.nextView;
+          if (bar.dataset.quarter) state.quarter = Number(bar.dataset.quarter);
+          if (bar.dataset.month) state.month = Number(bar.dataset.month);
+          if (bar.dataset.week) state.week = Number(bar.dataset.week);
+          render();
+        });
       });
     }
 
@@ -817,39 +818,14 @@
       `;
     }
 
-    function populateTimeFilters() {
-      weekFilter.innerHTML = "";
-      for (let week = 1; week <= 13; week += 1) {
-        weekFilter.insertAdjacentHTML("beforeend", `<option value="${week}">Week ${week}</option>`);
-      }
-
-      const days = [...new Set(leads.map(row => row.date))].sort();
-      dayFilter.innerHTML = "";
-      days.forEach(date => {
-        dayFilter.insertAdjacentHTML("beforeend", `<option value="${date}">${formatDay(date)}</option>`);
-      });
-      state.day = days[0] || "2026-01-01";
-    }
-
-    function renderTimeControls() {
+    function renderChartControls() {
       document.querySelectorAll(".view-btn").forEach(button => {
-        button.classList.toggle("active", button.dataset.view === state.timeView);
+        button.classList.toggle("active", button.dataset.view === state.chartView);
       });
-      monthFilter.value = String(state.month);
-      weekFilter.value = String(state.week);
-      dayFilter.value = state.day;
-      monthFilter.disabled = state.timeView === "quarter" || state.timeView === "week";
-      weekFilter.disabled = state.timeView === "quarter" || state.timeView === "month" || state.timeView === "day";
-      dayFilter.disabled = state.timeView !== "day";
-
-      if (state.timeView === "quarter") reportWindow.textContent = "Q1 2026 sales view";
-      if (state.timeView === "month") reportWindow.textContent = `${monthNames[state.month - 1]} 2026 sales view`;
-      if (state.timeView === "week") reportWindow.textContent = `Week ${state.week} of Q1 2026`;
-      if (state.timeView === "day") reportWindow.textContent = `${formatDay(state.day)}, 2026`;
     }
 
     function render() {
-      renderTimeControls();
+      renderChartControls();
       const rows = activeRows();
       renderFilterLabel();
       renderKpis(rows);
@@ -862,38 +838,42 @@
 
     document.querySelectorAll(".view-btn").forEach(button => {
       button.addEventListener("click", () => {
-        state.timeView = button.dataset.view;
+        state.chartView = button.dataset.view;
+        if (state.chartView === "quarter") {
+          state.quarter = null;
+          state.month = null;
+          state.week = null;
+        }
+        if (state.chartView === "month") {
+          state.quarter = null;
+          state.month = null;
+          state.week = null;
+        }
+        if (state.chartView === "week") {
+          state.quarter = null;
+          state.month = null;
+          state.week = null;
+        }
+        if (state.chartView === "day") {
+          state.quarter = null;
+          state.month = null;
+          state.week = null;
+        }
         render();
       });
-    });
-
-    monthFilter.addEventListener("change", () => {
-      state.month = Number(monthFilter.value);
-      state.timeView = "month";
-      render();
-    });
-
-    weekFilter.addEventListener("change", () => {
-      state.week = Number(weekFilter.value);
-      state.timeView = "week";
-      render();
-    });
-
-    dayFilter.addEventListener("change", () => {
-      state.day = dayFilter.value;
-      state.timeView = "day";
-      render();
     });
 
     document.querySelector("#resetFilters").addEventListener("click", () => {
       state.rep = null;
       state.inquiry = null;
       state.outcome = null;
-      state.timeView = "quarter";
+      state.chartView = "quarter";
+      state.quarter = null;
+      state.month = null;
+      state.week = null;
       render();
     });
 
-    populateTimeFilters();
     render();
   </script>
 </body>
