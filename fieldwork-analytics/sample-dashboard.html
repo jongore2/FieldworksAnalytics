@@ -1,0 +1,622 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Service Co. | Sales Command Center</title>
+  <style>
+    :root {
+      --bg: #050608;
+      --panel: #101418;
+      --panel-2: #151b21;
+      --line: #27313a;
+      --text: #eef4f1;
+      --muted: #96a39d;
+      --green: #41f18f;
+      --lime: #b6ff5f;
+      --amber: #ffbf4d;
+      --blue: #58c7ff;
+      --red: #ff5b6e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(65, 241, 143, .16), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(88, 199, 255, .12), transparent 26rem),
+        linear-gradient(145deg, #050608 0%, #0b0f12 58%, #040506 100%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1440px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 72px);
+      line-height: .92;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .brand {
+      color: var(--green);
+      display: block;
+      text-shadow: 0 0 24px rgba(65, 241, 143, .26);
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 720px;
+    }
+
+    .period {
+      border: 1px solid var(--line);
+      background: rgba(16, 20, 24, .72);
+      padding: 14px 16px;
+      border-radius: 8px;
+      min-width: 230px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    }
+
+    .period b {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+
+    .filter-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(39, 49, 58, .72);
+    }
+
+    .filter-strip span {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    button {
+      border: 1px solid rgba(65, 241, 143, .42);
+      background: rgba(65, 241, 143, .08);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--green);
+      box-shadow: 0 0 18px rgba(65, 241, 143, .16);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(21, 27, 33, .92), rgba(12, 15, 18, .94));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .04);
+      overflow: hidden;
+    }
+
+    .kpi { grid-column: span 3; min-height: 136px; }
+    .wide { grid-column: span 7; }
+    .side { grid-column: span 5; }
+    .half { grid-column: span 6; }
+    .full { grid-column: 1 / -1; }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .value {
+      font-size: 44px;
+      line-height: 1;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .signal {
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .card h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 104px 1fr 64px;
+      gap: 12px;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .bar-row.clickable, .table tbody tr {
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .bar-row.clickable:hover, .table tbody tr:hover {
+      color: var(--green);
+    }
+
+    .selected-row td, .selected-bar {
+      color: var(--green);
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #07090b;
+      border: 1px solid #1f2930;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--green), var(--lime));
+      box-shadow: 0 0 18px rgba(65, 241, 143, .38);
+    }
+
+    .bar.blue { background: linear-gradient(90deg, var(--blue), var(--green)); }
+    .bar.amber { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .table th {
+      color: var(--muted);
+      font-weight: 600;
+      text-align: right;
+      padding: 0 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table th:first-child, .table td:first-child { text-align: left; }
+
+    .table td {
+      padding: 11px 0;
+      border-bottom: 1px solid rgba(39, 49, 58, .62);
+      text-align: right;
+    }
+
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(65, 241, 143, .7);
+    }
+
+    .chart {
+      width: 100%;
+      height: 260px;
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 5px;
+      align-items: end;
+      padding-top: 8px;
+    }
+
+    .day {
+      min-width: 0;
+      height: var(--h);
+      border-radius: 5px 5px 2px 2px;
+      background: linear-gradient(180deg, rgba(65, 241, 143, .96), rgba(88, 199, 255, .76));
+      position: relative;
+      box-shadow: 0 0 16px rgba(65, 241, 143, .24);
+    }
+
+    .day::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #eef4f1;
+      color: #111;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      width: max-content;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease;
+      z-index: 3;
+    }
+
+    .day:hover::after { opacity: 1; }
+
+    .insight {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(39, 49, 58, .68);
+    }
+
+    .insight:last-child { border-bottom: 0; }
+
+    .bolt {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: rgba(65, 241, 143, .14);
+      color: var(--green);
+      border: 1px solid rgba(65, 241, 143, .28);
+    }
+
+    .insight p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .insight strong { color: var(--text); }
+
+    .demo-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .demo-nav a {
+      color: var(--text);
+      border: 1px solid rgba(65, 241, 143, .42);
+      background: rgba(65, 241, 143, .08);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .demo-nav a:hover {
+      border-color: var(--green);
+      box-shadow: 0 0 18px rgba(65, 241, 143, .16);
+    }
+
+    .demo-note {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    footer {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      header { display: block; }
+      .period { margin-top: 16px; }
+      .kpi, .wide, .side, .half { grid-column: 1 / -1; }
+      .chart { gap: 3px; }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100vw - 24px, 1440px); padding-top: 18px; }
+      .kpi { min-height: auto; }
+      .value { font-size: 36px; }
+      .bar-row { grid-template-columns: 88px 1fr 54px; }
+      .table { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="demo-nav" aria-label="Demo dashboard navigation">
+      <a href="index.html">Back to Fieldwork Analytics</a>
+      <span class="demo-note">Sample dashboard with anonymized demo data</span>
+      <a href="index.html#contact">Book a Call</a>
+    </nav>
+    <header>
+      <div>
+        <h1><span class="brand">Demo Service Co.</span>Sales Command Center</h1>
+        <p class="subtitle">A sample lead-flow dashboard showing sold subscriptions, conversion, inquiry mix, follow-up gaps, and rep performance for a field service business.</p>
+      </div>
+      <div class="period">
+        <b>Reporting Window</b>
+        <span>Apr 1-30, 2026</span>
+        <div class="filter-strip">
+          <span id="activeFilter">All leads</span>
+          <button id="resetFilters" type="button">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="card kpi">
+        <div class="label">Total Leads</div>
+        <div class="value" id="kpiLeads">511</div>
+        <div class="signal" id="kpiLeadsSignal">Clean rows from Master tab</div>
+      </article>
+      <article class="card kpi">
+        <div class="label">Sold Subscriptions</div>
+        <div class="value" id="kpiSold">192</div>
+        <div class="signal" id="kpiSoldSignal">37.6% sold conversion</div>
+      </article>
+      <article class="card kpi">
+        <div class="label">Scheduled Next Step</div>
+        <div class="value" id="kpiScheduled">179</div>
+        <div class="signal">Consults, inspections, OTPC</div>
+      </article>
+      <article class="card kpi">
+        <div class="label">Notes Captured</div>
+        <div class="value" id="kpiNotes">114</div>
+        <div class="signal">Ready for AI objection mining</div>
+      </article>
+
+      <article class="card wide">
+        <h2>Daily Lead Flow</h2>
+        <div class="chart" id="dailyChart"></div>
+      </article>
+
+      <article class="card side">
+        <h2>AI-Style Readout</h2>
+        <div id="insights"></div>
+      </article>
+
+      <article class="card half">
+        <h2>Rep Leaderboard</h2>
+        <table class="table">
+          <thead><tr><th>Rep</th><th>Leads</th><th>Sold</th><th>Conv.</th><th>Scheduled</th></tr></thead>
+          <tbody id="repRows"></tbody>
+        </table>
+      </article>
+
+      <article class="card half">
+        <h2>Inquiry Conversion</h2>
+        <div id="inquiryBars"></div>
+      </article>
+
+      <article class="card full">
+        <h2>Outcome Mix</h2>
+        <div id="outcomeBars"></div>
+      </article>
+    </section>
+    <footer>Demo dashboard by Fieldwork Analytics. Sample names and data are used for illustration. Click reps, inquiry types, or outcomes to filter the whole dashboard.</footer>
+  </main>
+
+  <script src="sample-dashboard-data.js"></script>
+  <script>
+    const leads = window.SAMPLE_LEADS || [];
+    const state = { rep: null, inquiry: null, outcome: null };
+    const repRows = document.querySelector("#repRows");
+    const inquiryBars = document.querySelector("#inquiryBars");
+    const outcomeBars = document.querySelector("#outcomeBars");
+    const dailyChart = document.querySelector("#dailyChart");
+    const insights = document.querySelector("#insights");
+    const money = new Intl.NumberFormat("en-US");
+
+    function isSold(row) {
+      return row.outcomes.includes("Sold Subscription");
+    }
+
+    function isScheduled(row) {
+      return row.outcomes.includes("Scheduled Consult / Inspection") || row.outcomes.includes("Scheduled OTPC");
+    }
+
+    function pct(value) {
+      return Number.isFinite(value) ? `${value.toFixed(1)}%` : "0.0%";
+    }
+
+    function activeRows() {
+      return leads.filter(row =>
+        (!state.rep || row.rep === state.rep) &&
+        (!state.inquiry || row.inquiry === state.inquiry) &&
+        (!state.outcome || row.outcomes.includes(state.outcome))
+      );
+    }
+
+    function summarize(rows, key) {
+      const map = new Map();
+      rows.forEach(row => {
+        const keys = key === "outcome" ? row.outcomes : [row[key]];
+        keys.forEach(item => {
+          if (!item) return;
+          if (!map.has(item)) map.set(item, { name: item, leads: 0, sold: 0, scheduled: 0, notes: 0 });
+          const entry = map.get(item);
+          entry.leads += 1;
+          entry.sold += isSold(row) ? 1 : 0;
+          entry.scheduled += isScheduled(row) ? 1 : 0;
+          entry.notes += row.note ? 1 : 0;
+        });
+      });
+      return [...map.values()].map(entry => ({
+        ...entry,
+        conversion: entry.leads ? entry.sold / entry.leads * 100 : 0
+      }));
+    }
+
+    function setFilter(type, value) {
+      state[type] = state[type] === value ? null : value;
+      render();
+    }
+
+    function renderKpis(rows) {
+      const soldCount = rows.filter(isSold).length;
+      document.querySelector("#kpiLeads").textContent = money.format(rows.length);
+      document.querySelector("#kpiSold").textContent = money.format(soldCount);
+      document.querySelector("#kpiSoldSignal").textContent = `${pct(rows.length ? soldCount / rows.length * 100 : 0)} sold conversion`;
+      document.querySelector("#kpiScheduled").textContent = money.format(rows.filter(isScheduled).length);
+      document.querySelector("#kpiNotes").textContent = money.format(rows.filter(row => row.note).length);
+      document.querySelector("#kpiLeadsSignal").textContent = state.rep || state.inquiry || state.outcome ? "Filtered lead set" : "Clean rows from Master tab";
+    }
+
+    function renderFilterLabel() {
+      const parts = [];
+      if (state.rep) parts.push(`Rep: ${state.rep}`);
+      if (state.inquiry) parts.push(`Inquiry: ${state.inquiry}`);
+      if (state.outcome) parts.push(`Outcome: ${state.outcome}`);
+      document.querySelector("#activeFilter").textContent = parts.length ? parts.join(" / ") : "All leads";
+    }
+
+    function renderReps(rows) {
+      repRows.innerHTML = "";
+      summarize(rows, "rep").sort((a, b) => b.sold - a.sold).forEach((r, i) => {
+        repRows.insertAdjacentHTML("beforeend", `
+          <tr class="${state.rep === r.name ? "selected-row" : ""}" data-rep="${r.name}">
+            <td><span class="rank"><span class="dot"></span>${i + 1}. ${r.name}</span></td>
+            <td>${r.leads}</td>
+            <td>${r.sold}</td>
+            <td>${pct(r.conversion)}</td>
+            <td>${r.scheduled}</td>
+          </tr>
+        `);
+      });
+      repRows.querySelectorAll("tr").forEach(row => {
+        row.addEventListener("click", () => setFilter("rep", row.dataset.rep));
+      });
+    }
+
+    function renderInquiry(rows) {
+      const data = summarize(rows, "inquiry").sort((a, b) => b.leads - a.leads);
+      const max = Math.max(...data.map(d => d.conversion), 1);
+      inquiryBars.innerHTML = "";
+      data.forEach(d => {
+        inquiryBars.insertAdjacentHTML("beforeend", `
+          <div class="bar-row clickable ${state.inquiry === d.name ? "selected-bar" : ""}" data-inquiry="${d.name}">
+            <span>${d.name}</span>
+            <span class="bar-track"><span class="bar blue" style="display:block;width:${Math.max(3, d.conversion / max * 100)}%"></span></span>
+            <strong>${pct(d.conversion)}</strong>
+          </div>
+        `);
+      });
+      inquiryBars.querySelectorAll(".bar-row").forEach(row => {
+        row.addEventListener("click", () => setFilter("inquiry", row.dataset.inquiry));
+      });
+    }
+
+    function renderOutcomes(rows) {
+      const data = summarize(rows, "outcome").sort((a, b) => b.leads - a.leads);
+      const max = Math.max(...data.map(d => d.leads), 1);
+      outcomeBars.innerHTML = "";
+      data.forEach(d => {
+        const hot = d.name.includes("Rejected") || d.name.includes("Not Interested");
+        outcomeBars.insertAdjacentHTML("beforeend", `
+          <div class="bar-row clickable ${state.outcome === d.name ? "selected-bar" : ""}" data-outcome="${d.name}">
+            <span>${d.name}</span>
+            <span class="bar-track"><span class="bar ${hot ? "amber" : ""}" style="display:block;width:${Math.max(3, d.leads / max * 100)}%"></span></span>
+            <strong>${d.leads}</strong>
+          </div>
+        `);
+      });
+      outcomeBars.querySelectorAll(".bar-row").forEach(row => {
+        row.addEventListener("click", () => setFilter("outcome", row.dataset.outcome));
+      });
+    }
+
+    function renderDaily(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        if (!map.has(row.date)) map.set(row.date, { date: row.date, leads: 0, sold: 0 });
+        const entry = map.get(row.date);
+        entry.leads += 1;
+        entry.sold += isSold(row) ? 1 : 0;
+      });
+      const days = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
+      const max = Math.max(...days.map(d => d.leads), 1);
+      dailyChart.innerHTML = "";
+      days.forEach(d => {
+        const label = new Date(`${d.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const height = Math.max(5, d.leads / max * 100);
+        dailyChart.insertAdjacentHTML("beforeend", `<div class="day" style="--h:${height}%" data-tip="${label}: ${d.leads} leads, ${d.sold} sold"></div>`);
+      });
+    }
+
+    function renderInsights(rows) {
+      const totalSold = rows.filter(isSold).length;
+      const repTop = summarize(rows, "rep").sort((a, b) => b.conversion - a.conversion)[0];
+      const inquiryTop = summarize(rows, "inquiry").filter(d => d.leads >= 5).sort((a, b) => b.conversion - a.conversion)[0];
+      const price = rows.filter(row => row.outcomes.includes("Rejected due to Price")).length;
+      const noteCount = rows.filter(row => row.note).length;
+      insights.innerHTML = `
+        <div class="insight"><div class="bolt">1</div><p><strong>${rows.length} matching leads:</strong> ${totalSold} sold subscriptions at ${pct(rows.length ? totalSold / rows.length * 100 : 0)} conversion.</p></div>
+        <div class="insight"><div class="bolt">2</div><p><strong>${repTop ? repTop.name : "No rep"} leads this view:</strong> ${repTop ? pct(repTop.conversion) : "0.0%"} conversion across ${repTop ? repTop.leads : 0} leads.</p></div>
+        <div class="insight"><div class="bolt">3</div><p><strong>${inquiryTop ? inquiryTop.name : "No inquiry"} is the strongest inquiry type here:</strong> ${inquiryTop ? pct(inquiryTop.conversion) : "0.0%"} conversion.</p></div>
+        <div class="insight"><div class="bolt">4</div><p><strong>Follow-up texture:</strong> ${price} price objections and ${noteCount} note-bearing leads in this filtered view.</p></div>
+      `;
+    }
+
+    function render() {
+      const rows = activeRows();
+      renderFilterLabel();
+      renderKpis(rows);
+      renderDaily(rows);
+      renderInsights(rows);
+      renderReps(rows);
+      renderInquiry(rows);
+      renderOutcomes(rows);
+    }
+
+    document.querySelector("#resetFilters").addEventListener("click", () => {
+      state.rep = null;
+      state.inquiry = null;
+      state.outcome = null;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
+
